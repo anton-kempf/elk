@@ -1,0 +1,41 @@
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.15.3
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
+      - cluster.name=random-cluster-1908
+      - xpack.security.enabled=false
+
+  logstash:
+    image: logstash:8.15.3
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5044:5044
+    volumes:
+      - ./nginx.conf:/usr/share/logstash/pipeline/nginx.conf
+      - ./logs:/var/log/nginx
+  kibana:
+    image: kibana:8.15.3
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601 
+
+  nginx:
+    image: nginx:stable-alpine3.21-perl
+    ports:
+      - 8080:80
+    volumes:
+       - ./logs:/var/log/nginx
+
+  filebeat:
+    image: elastic/filebeat:8.19.2
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro 
+      - ./logs:/var/log/nginx
+    depends_on:
+      - logstash  

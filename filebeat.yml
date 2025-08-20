@@ -1,0 +1,19 @@
+filebeat.inputs: []
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            contains:
+              docker.container.image: "httpd:trixie"   # имя образа Apache
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                service: apache_logs
+
+output.logstash:
+  hosts: ["logstash:5044"]
